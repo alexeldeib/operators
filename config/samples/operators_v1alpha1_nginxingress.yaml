@@ -1,0 +1,7 @@
+apiVersion: operators.alexeldeib.xyz/v1alpha1
+kind: NginxIngress
+metadata:
+  name: nginxingress-sample
+spec:
+  # Add fields here
+  foo: bar
