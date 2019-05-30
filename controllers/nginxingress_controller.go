@@ -19,16 +19,20 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/helm/pkg/helm"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	operatorsv1alpha1 "_/home/ace/operators/api/v1alpha1"
+	operatorsv1alpha1 "github.com/alexeldeib/operators/api/v1alpha1"
 )
 
 // NginxIngressReconciler reconciles a NginxIngress object
 type NginxIngressReconciler struct {
 	client.Client
-	Log logr.Logger
+	Log        logr.Logger
+	Recorder   record.EventRecorder
+	HelmClient helm.Interface
 }
 
 // +kubebuilder:rbac:groups=operators.alexeldeib.xyz,resources=nginxingresses,verbs=get;list;watch;create;update;patch;delete

@@ -1,5 +1,4 @@
 /*
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -19,8 +18,10 @@ import (
 	"flag"
 	"os"
 
-	operatorsv1alpha1 "_/home/ace/operators/api/v1alpha1"
-	"_/home/ace/operators/controllers"
+	operatorsv1alpha1 "github.com/alexeldeib/operators/api/v1alpha1"
+	"github.com/alexeldeib/operators/controllers"
+	"github.com/alexeldeib/operators/pkg/helmclient"
+	"k8s.io/helm/cmd/helm/installer"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -30,8 +31,12 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme              = runtime.NewScheme()
+	setupLog            = ctrl.Log.WithName("setup")
+	stableRepositoryURL = "https://kubernetes-charts.storage.googleapis.com"
+	// This is the IPv4 loopback, not localhost, because we have to force IPv4
+	// for Dockerized Helm: https://github.com/kubernetes/helm/issues/1410
+	localRepositoryURL = "http://127.0.0.1:8879/charts"
 )
 
 func init() {
@@ -53,17 +58,32 @@ func main() {
 		os.Exit(1)
 	}
 
+	helmClient, err := helmclient.New()
+	if err != nil {
+		setupLog.Error(err, "failed to create helm client")
+		os.Exit(2)
+	}
+
+	if err := installer.Initialize(helmclient.Settings().home, os.Stdout, false, helmclient.Settings(), stableRepositoryURL, localRepositoryURL); err != nil {
+		return setupLog.Error(err, "error initializing helm")
+		os.Exit(3)
+	}
+
 	err = (&controllers.HelmReleaseReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("HelmRelease"),
+		Client:     mgr.GetClient(),
+		HelmClient: helmClient,
+		Recorder:   mgr.GetEventRecorderFor("HelmRelease"),
+		Log:        ctrl.Log.WithName("controllers").WithName("HelmRelease"),
 	}).SetupWithManager(mgr)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "HelmRelease")
 		os.Exit(1)
 	}
 	err = (&controllers.NginxIngressReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("NginxIngress"),
+		Client:     mgr.GetClient(),
+		HelmClient: helmClient,
+		Recorder:   mgr.GetEventRecorderFor("NginxIngress"),
+		Log:        ctrl.Log.WithName("controllers").WithName("NginxIngress"),
 	}).SetupWithManager(mgr)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NginxIngress")

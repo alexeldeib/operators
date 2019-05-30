@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	operatorsv1alpha1 "_/home/ace/operators/api/v1alpha1"
+	operatorsv1alpha1 "github.com/alexeldeib/operators/api/v1alpha1"
 
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"

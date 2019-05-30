@@ -1,0 +1,55 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - operators.alexeldeib.xyz
+  resources:
+  - helmreleases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - operators.alexeldeib.xyz
+  resources:
+  - helmreleases/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - patch
+  - create
+- apiGroups:
+  - operators.alexeldeib.xyz
+  resources:
+  - nginxingresses
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - operators.alexeldeib.xyz
+  resources:
+  - nginxingresses/status
+  verbs:
+  - get
+  - update
+  - patch
