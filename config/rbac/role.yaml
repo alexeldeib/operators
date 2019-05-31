@@ -29,6 +29,20 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - pods
+  verbs:
+  - list
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - pods/portforward
+  verbs:
+  - list
+  - create
+- apiGroups:
+  - ""
+  resources:
   - events
   verbs:
   - patch

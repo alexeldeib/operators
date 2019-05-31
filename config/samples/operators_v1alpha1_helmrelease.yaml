@@ -1,7 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blah
+---
 apiVersion: operators.alexeldeib.xyz/v1alpha1
 kind: HelmRelease
 metadata:
   name: nginx
+  namespace: blah
 spec:
   # Add fields here
   chart: stable/nginx-ingress

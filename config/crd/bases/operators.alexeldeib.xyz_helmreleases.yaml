@@ -390,7 +390,7 @@ spec:
                 Important: Run "make" to regenerate code after modifying this file'
               type: string
             values:
-              type: object
+              type: string
           required:
           - chart
           type: object

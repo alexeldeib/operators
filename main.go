@@ -15,13 +15,17 @@ limitations under the License.
 package main
 
 import (
+	"bytes"
 	"flag"
+	"fmt"
+	"io"
 	"os"
+	"os/exec"
+	"sync"
+	"syscall"
 
 	operatorsv1alpha1 "github.com/alexeldeib/operators/api/v1alpha1"
 	"github.com/alexeldeib/operators/controllers"
-	"github.com/alexeldeib/operators/pkg/helmclient"
-	"k8s.io/helm/cmd/helm/installer"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -31,16 +35,11 @@ import (
 )
 
 var (
-	scheme              = runtime.NewScheme()
-	setupLog            = ctrl.Log.WithName("setup")
-	stableRepositoryURL = "https://kubernetes-charts.storage.googleapis.com"
-	// This is the IPv4 loopback, not localhost, because we have to force IPv4
-	// for Dockerized Helm: https://github.com/kubernetes/helm/issues/1410
-	localRepositoryURL = "http://127.0.0.1:8879/charts"
+	scheme   = runtime.NewScheme()
+	setupLog = ctrl.Log.WithName("setup")
 )
 
 func init() {
-
 	operatorsv1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
@@ -52,38 +51,80 @@ func main() {
 
 	ctrl.SetLogger(zap.Logger(true))
 
+	initCmd := exec.Command("/helm", "init", "--client-only")
+
+	var outbuf, errbuf bytes.Buffer
+	stdoutIn, err := initCmd.StdoutPipe()
+	if err != nil {
+		setupLog.Error(err, "failed to attach stdout pipe for helm")
+	}
+
+	stderrIn, err := initCmd.StderrPipe()
+	if err != nil {
+		setupLog.Error(err, "failed to attach stderr pipe for helm")
+	}
+
+	var errStdout, errStderr error
+	stdout := io.MultiWriter(os.Stdout, &outbuf)
+	stderr := io.MultiWriter(os.Stderr, &errbuf)
+
+	setupLog.Info("Executing helm initializaion")
+
+	if err = initCmd.Start(); err != nil {
+		setupLog.Error(err, "failed to init helm")
+	}
+
+	// Wait with progress.
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		_, errStdout = io.Copy(stdout, stdoutIn)
+		wg.Done()
+	}()
+
+	_, errStderr = io.Copy(stderr, stderrIn)
+	wg.Wait()
+
+	err = initCmd.Wait()
+	if errStderr != nil {
+		setupLog.Error(errStderr, "Unable to log stderr from helm", "errStderr")
+	}
+	if errStdout != nil {
+		setupLog.Error(errStdout, "Unable to log stdout from helm", "errStdout")
+	}
+	if err != nil {
+		// Ok is true if the error is non-nil and indicates the command ran to completion with non-zero exit code.
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				setupLog.Error(err, fmt.Sprintf("helm exited with code %d,\n stdout: %s,\n stderr: %s\n", status.ExitStatus(), string(outbuf.Bytes()), string(errbuf.Bytes())))
+			}
+		} else {
+			// Err is non-nil but the error came from waiting/executing rather than from the running command exiting with error.
+			setupLog.Error(err, "failed to wait on helm")
+		}
+	}
+	setupLog.Info("successfully init helm")
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{Scheme: scheme, MetricsBindAddress: metricsAddr})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	helmClient, err := helmclient.New()
-	if err != nil {
-		setupLog.Error(err, "failed to create helm client")
-		os.Exit(2)
-	}
-
-	if err := installer.Initialize(helmclient.Settings().home, os.Stdout, false, helmclient.Settings(), stableRepositoryURL, localRepositoryURL); err != nil {
-		return setupLog.Error(err, "error initializing helm")
-		os.Exit(3)
-	}
-
 	err = (&controllers.HelmReleaseReconciler{
-		Client:     mgr.GetClient(),
-		HelmClient: helmClient,
-		Recorder:   mgr.GetEventRecorderFor("HelmRelease"),
-		Log:        ctrl.Log.WithName("controllers").WithName("HelmRelease"),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("HelmRelease"),
+		Log:      ctrl.Log.WithName("controllers").WithName("HelmRelease"),
 	}).SetupWithManager(mgr)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "HelmRelease")
 		os.Exit(1)
 	}
 	err = (&controllers.NginxIngressReconciler{
-		Client:     mgr.GetClient(),
-		HelmClient: helmClient,
-		Recorder:   mgr.GetEventRecorderFor("NginxIngress"),
-		Log:        ctrl.Log.WithName("controllers").WithName("NginxIngress"),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("NginxIngress"),
+		Log:      ctrl.Log.WithName("controllers").WithName("NginxIngress"),
 	}).SetupWithManager(mgr)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NginxIngress")

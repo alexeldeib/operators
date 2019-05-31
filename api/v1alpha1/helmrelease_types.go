@@ -17,7 +17,6 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -27,8 +26,9 @@ import (
 type HelmReleaseSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Chart  string                `json:"chart"`
-	Values *runtime.RawExtension `json:"values,omitempty"`
+	Chart string `json:"chart"`
+	//+optional
+	Values string `json:"values,omitempty"`
 }
 
 // HelmReleaseStatus defines the observed state of HelmRelease
