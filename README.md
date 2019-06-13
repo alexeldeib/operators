@@ -7,7 +7,7 @@ The initial target set of resources is:
 - NginxIngress (name needs improvement): deploys an instance of Nginx-Ingress controller with an Azure Load balancer, pre-creating a Standard SKU Static Public IP.
 
 The second target set of resources would be:
-- Multicluster Ingress implementation
+- Global L7/L4 networking implementation
   - Two "global" options
   	- Front Door
     - Traffic Manager
@@ -20,10 +20,10 @@ The second target set of resources would be:
 ![fd-lb](https://user-images.githubusercontent.com/6800857/59407030-8c058800-8d9f-11e9-9355-518c757b6a2c.png)
 ![tm-ag](https://user-images.githubusercontent.com/6800857/59406928-37620d00-8d9f-11e9-94c4-3097e8951733.png)
 
-  - MultiClusterIngressComponent (terrible name, but to contrast with CRD for CLI which would deploy everything together)
+  - L4Component, L7Component (terrible name, but to contrast with CRD for CLI which would deploy everything together)
   	- Initial implementation would be CLI to deploy all resources
     - Use configures Ingress Controller on Node Port 80/443 or does SSL termination with Front Door/App Gateway, or they terminate SSL on their backend (on Node Port services)
-    - v2 implementation would allow each cluster to build its regional resources and register with existing global/regional resources, or build them as necessary.
+    - v2 implementation would allow each cluster to build its regional resources (hence, component) and register with existing global/regional resources, or build them as necessary.
 - KeyVault synced secret
 	- Specify a configMap-like structure of key:value pairs, where value is a fully qualified Azure Resource ID of a Key Vault secret, certificate, or key. 
     - Controller will create a Kubernetes Secret of type generic with the data field populated using the keys from the original structure and the returned values from Key Vault.
