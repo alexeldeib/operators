@@ -15,7 +15,7 @@ The second target set of resources would be:
   	- Load Balancer
     - Application Gateway
   - 2-tier or 3-tier architecture
-  - Examples
+  - Examples // TODO(ace): should really do TM to LB, which is a DNS lookup + single network hop.
   
 ![fd-lb](https://user-images.githubusercontent.com/6800857/59407030-8c058800-8d9f-11e9-9355-518c757b6a2c.png)
 ![tm-ag](https://user-images.githubusercontent.com/6800857/59406928-37620d00-8d9f-11e9-94c4-3097e8951733.png)
