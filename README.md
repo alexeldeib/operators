@@ -15,6 +15,11 @@ The second target set of resources would be:
   	- Load Balancer
     - Application Gateway
   - 2-tier or 3-tier architecture
+  - Examples
+  
+![fd-lb](https://user-images.githubusercontent.com/6800857/59407030-8c058800-8d9f-11e9-9355-518c757b6a2c.png)
+![tm-ag](https://user-images.githubusercontent.com/6800857/59406928-37620d00-8d9f-11e9-94c4-3097e8951733.png)
+
   - MultiClusterIngressComponent (terrible name, but to contrast with CRD for CLI which would deploy everything together)
   	- Initial implementation would be CLI to deploy all resources
     - Use configures Ingress Controller on Node Port 80/443 or does SSL termination with Front Door/App Gateway, or they terminate SSL on their backend (on Node Port services)
