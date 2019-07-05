@@ -26,15 +26,23 @@ import (
 type NginxIngressSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	SubscriptionID string `json:"subscriptionID"`
+	ResourceGroup  string `json:"resourceGroup"`
+	Location       string `json:"location"`
 }
 
 // NginxIngressStatus defines the observed state of NginxIngress
 type NginxIngressStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	// +optional
+	PublicIPReady bool `json:"publicIPReady,omitempty"`
+	// +optional
+	HelmReleaseReady bool `json:"helmReleaseReady,omitempty"`
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // NginxIngress is the Schema for the nginxingresses API
 type NginxIngress struct {

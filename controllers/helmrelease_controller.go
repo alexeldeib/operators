@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -93,7 +94,6 @@ func (r *HelmReleaseReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 				return ctrl.Result{}, errors.Wrap(err, "failed to get helm history ")
 			}
 
-			// TODO(ace): helm deletion
 			deleteCmd := exec.Command("/helm", "delete", helmRelease.Name, "--purge")
 
 			var outbuf, errbuf bytes.Buffer
@@ -174,10 +174,35 @@ func (r *HelmReleaseReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		return ctrl.Result{}, nil
 	}
 
-	// TODO(ace): look at how config map does this, store it as a string and do some yaml validation, nothing more
-	// TODO(ace): actually, probably create a struct wih 1:1 mapping to nginx values yaml
-	createCmd := exec.Command("/helm", "upgrade", "--install", "--wait", "--force", "--atomic", helmRelease.Name, helmRelease.Spec.Chart, "--namespace", helmRelease.Namespace)
+	var createCmd *exec.Cmd
+	args := []string{"upgrade", "--install", "--wait", "--force", "--atomic", helmRelease.Name, helmRelease.Spec.Chart, "--namespace", helmRelease.Namespace}
 
+	// This is more or less how config maps work, they model arbitrary data as string and write to a file.
+	// TODO(ace): probably create a struct wih 1:1 mapping to nginx values yaml.
+	// Their config is quite large, so unless validation becomes a problem will probably stick to this.
+	if helmRelease.Spec.Values != "" {
+		tmpFile, err := ioutil.TempFile(os.TempDir(), "")
+		if err != nil {
+			r.Log.Error(err, "Cannot create temporary file for values.yml")
+			return ctrl.Result{}, err
+		}
+
+		// Remember to clean up the file afterwards
+		defer os.Remove(tmpFile.Name())
+		if _, err := tmpFile.Write([]byte(helmRelease.Spec.Values)); err != nil {
+			r.Log.Error(err, "Failed to write tmpfile with values.yaml")
+			return ctrl.Result{}, err
+		}
+		args = append(args, "-f", tmpFile.Name())
+	}
+
+	if helmRelease.Spec.Overrides != nil {
+		for _, override := range helmRelease.Spec.Overrides {
+			args = append(args, "--set", override)
+		}
+	}
+
+	createCmd = exec.Command("/helm", args...)
 	var outbuf, errbuf bytes.Buffer
 	stdoutIn, err := createCmd.StdoutPipe()
 	if err != nil {

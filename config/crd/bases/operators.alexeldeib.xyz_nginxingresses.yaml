@@ -11,6 +11,8 @@ spec:
     kind: NginxIngress
     plural: nginxingresses
   scope: ""
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: NginxIngress is the Schema for the nginxingresses API
@@ -384,8 +386,29 @@ spec:
               type: string
           type: object
         spec:
+          properties:
+            location:
+              type: string
+            resourceGroup:
+              type: string
+            subscriptionID:
+              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                Important: Run "make" to regenerate code after modifying this file'
+              type: string
+          required:
+          - subscriptionID
+          - resourceGroup
+          - location
           type: object
         status:
+          properties:
+            helmReleaseReady:
+              type: boolean
+            publicIPReady:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "make" to regenerate code after modifying
+                this file'
+              type: boolean
           type: object
       type: object
   versions:

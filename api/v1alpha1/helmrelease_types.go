@@ -27,15 +27,17 @@ type HelmReleaseSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	Chart string `json:"chart"`
-	//+optional
+	// +optional
 	Values string `json:"values,omitempty"`
+	// +optional
+	Overrides []string `json:"overrides,omitempty"`
 }
 
 // HelmReleaseStatus defines the observed state of HelmRelease
 type HelmReleaseStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	ProvisioningStatus string `json:"provisioningStatus"`
+	ProvisioningState string `json:"provisioningState"`
 }
 
 // +kubebuilder:object:root=true

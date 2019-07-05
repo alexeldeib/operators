@@ -3,5 +3,6 @@ kind: NginxIngress
 metadata:
   name: nginxingress-sample
 spec:
-  # Add fields here
-  foo: bar
+  subscriptionID: b98981de-4152-480f-a515-59b099299283 
+  resourceGroup: ace-test
+  location: westus2

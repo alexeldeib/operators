@@ -24,6 +24,7 @@ import (
 	"sync"
 	"syscall"
 
+	cloudv1alpha1 "github.com/alexeldeib/cloud/api/v1alpha1"
 	operatorsv1alpha1 "github.com/alexeldeib/operators/api/v1alpha1"
 	"github.com/alexeldeib/operators/controllers"
 
@@ -41,6 +42,7 @@ var (
 
 func init() {
 	operatorsv1alpha1.AddToScheme(scheme)
+	cloudv1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -124,6 +126,7 @@ func main() {
 	err = (&controllers.NginxIngressReconciler{
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("NginxIngress"),
+		Scheme:   scheme,
 		Log:      ctrl.Log.WithName("controllers").WithName("NginxIngress"),
 	}).SetupWithManager(mgr)
 	if err != nil {

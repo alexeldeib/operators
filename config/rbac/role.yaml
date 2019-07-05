@@ -56,9 +56,9 @@ rules:
   - list
   - watch
   - create
+  - delete
   - update
   - patch
-  - delete
 - apiGroups:
   - operators.alexeldeib.xyz
   resources:
@@ -67,3 +67,15 @@ rules:
   - get
   - update
   - patch
+- apiGroups:
+  - azure.cloud.alexeldeib.xyz
+  resources:
+  - publicips
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete

@@ -389,6 +389,10 @@ spec:
               description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                 Important: Run "make" to regenerate code after modifying this file'
               type: string
+            overrides:
+              items:
+                type: string
+              type: array
             values:
               type: string
           required:
@@ -396,13 +400,13 @@ spec:
           type: object
         status:
           properties:
-            provisioningStatus:
+            provisioningState:
               description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                 of cluster Important: Run "make" to regenerate code after modifying
                 this file'
               type: string
           required:
-          - provisioningStatus
+          - provisioningState
           type: object
       type: object
   versions:
